@@ -17,6 +17,14 @@ Die Seite `/notizen` speichert Lernnotizen in SQLite (EF Core). Die Verbindung s
 (`ConnectionStrings:Default`). Lokal liegt die Datei `app.db` im Arbeitsverzeichnis (`src/DeveloperEducation` bei `dotnet run --project`);
 sie ist per `.gitignore` ausgeschlossen. Das Schema wird beim Start mit `EnsureCreated()` angelegt.
 
+## Registrierung und Anmeldung
+
+Registrierung (`/konto/registrieren`) und Anmeldung (`/konto/anmelden`) nutzen ASP.NET Core Identity mit derselben SQLite-Datenbank. Abmelden erfolgt per POST auf `/konto/abmelden` (Button in der Navigation). `/notizen` erfordert eine Anmeldung; die Notizen bleiben für alle Benutzer gemeinsam. Es gibt keine E-Mail-Bestätigung, keine Rollen und keine Kontoverwaltung.
+
+**Achtung – bestehende Datenbank:** Das Schema wird mit `EnsureCreated()` angelegt (keine Migrationen). Eine vorhandene `app.db` erhält die Identity-Tabellen **nicht**. Vor dem Start dieser Version muss `app.db` gelöscht werden; im Container muss das Volume `developereducation-data` neu angelegt werden (`docker volume rm developereducation-data`). Die bisherigen Notizen gehen dabei verloren.
+
+Bekannte Einschränkung: Im Container läuft die Seite nur über HTTP (Port 8080, keine HTTPS-Weiterleitung); das Anmelde-Cookie wird daher unverschlüsselt übertragen.
+
 ## Container
 
 ```sh

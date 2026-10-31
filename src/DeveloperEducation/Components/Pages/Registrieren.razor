@@ -1,0 +1,68 @@
+@page "/konto/registrieren"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Registrieren</PageTitle>
+
+<h1>Registrieren</h1>
+
+<EditForm Model="Input" FormName="registrieren" OnValidSubmit="Registrieren_">
+    <DataAnnotationsValidator />
+    @foreach (var fehler in Fehler)
+    {
+        <div class="alert alert-danger">@fehler</div>
+    }
+    <div class="mb-3">
+        <label for="email" class="form-label">E-Mail</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="Input.Email" autocomplete="username" />
+        <ValidationMessage For="() => Input.Email" />
+    </div>
+    <div class="mb-3">
+        <label for="passwort" class="form-label">Passwort</label>
+        <InputText id="passwort" type="password" class="form-control" @bind-Value="Input.Passwort" autocomplete="new-password" />
+        <ValidationMessage For="() => Input.Passwort" />
+    </div>
+    <div class="mb-3">
+        <label for="bestaetigen" class="form-label">Passwort bestätigen</label>
+        <InputText id="bestaetigen" type="password" class="form-control" @bind-Value="Input.PasswortBestaetigen" autocomplete="new-password" />
+        <ValidationMessage For="() => Input.PasswortBestaetigen" />
+    </div>
+    <button type="submit" class="btn btn-primary">Registrieren</button>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    private RegistrierenModel Input { get; set; } = new();
+
+    private List<string> Fehler { get; } = [];
+
+    private async Task Registrieren_()
+    {
+        var user = new IdentityUser { UserName = Input.Email, Email = Input.Email };
+        var result = await UserManager.CreateAsync(user, Input.Passwort);
+        if (!result.Succeeded)
+        {
+            Fehler.AddRange(result.Errors.Select(e => e.Description));
+            return;
+        }
+
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    private class RegistrierenModel
+    {
+        [Required(ErrorMessage = "Bitte eine E-Mail-Adresse eingeben.")]
+        [EmailAddress(ErrorMessage = "Bitte eine gültige E-Mail-Adresse eingeben.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Bitte ein Passwort eingeben.")]
+        public string Passwort { get; set; } = "";
+
+        [Compare(nameof(Passwort), ErrorMessage = "Die Passwörter stimmen nicht überein.")]
+        public string PasswortBestaetigen { get; set; } = "";
+    }
+}

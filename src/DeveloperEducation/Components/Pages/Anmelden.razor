@@ -1,0 +1,68 @@
+@page "/konto/anmelden"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Anmelden</PageTitle>
+
+<h1>Anmelden</h1>
+
+<EditForm Model="Input" FormName="anmelden" OnValidSubmit="Anmelden_">
+    <DataAnnotationsValidator />
+    @if (Fehler is not null)
+    {
+        <div class="alert alert-danger">@Fehler</div>
+    }
+    <div class="mb-3">
+        <label for="email" class="form-label">E-Mail</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="Input.Email" autocomplete="username" />
+        <ValidationMessage For="() => Input.Email" />
+    </div>
+    <div class="mb-3">
+        <label for="passwort" class="form-label">Passwort</label>
+        <InputText id="passwort" type="password" class="form-control" @bind-Value="Input.Passwort" autocomplete="current-password" />
+        <ValidationMessage For="() => Input.Passwort" />
+    </div>
+    <div class="form-check mb-3">
+        <InputCheckbox id="merken" class="form-check-input" @bind-Value="Input.AngemeldetBleiben" />
+        <label for="merken" class="form-check-label">Angemeldet bleiben</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Anmelden</button>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    private AnmeldenModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? Fehler { get; set; }
+
+    private async Task Anmelden_()
+    {
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Passwort, Input.AngemeldetBleiben, lockoutOnFailure: false);
+        if (!result.Succeeded)
+        {
+            Fehler = "E-Mail oder Passwort ist falsch.";
+            return;
+        }
+
+        Navigation.NavigateTo(IstLokal(ReturnUrl) ? ReturnUrl! : "/", forceLoad: true);
+    }
+
+    private static bool IstLokal(string? url) =>
+        !string.IsNullOrEmpty(url) && url[0] == '/' && (url.Length == 1 || (url[1] != '/' && url[1] != '\\'));
+
+    private class AnmeldenModel
+    {
+        [Required(ErrorMessage = "Bitte eine E-Mail-Adresse eingeben.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Bitte ein Passwort eingeben.")]
+        public string Passwort { get; set; } = "";
+
+        public bool AngemeldetBleiben { get; set; }
+    }
+}
