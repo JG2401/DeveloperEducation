@@ -1,5 +1,7 @@
 using DeveloperEducation.Components;
 using DeveloperEducation.Data;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents();
 builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme).AddIdentityCookies();
+builder.Services.AddIdentityCore<IdentityUser>(o =>
+    {
+        o.SignIn.RequireConfirmedAccount = false;
+        o.Password.RequireNonAlphanumeric = false;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+builder.Services.AddCascadingAuthenticationState();
 
 var app = builder.Build();
 
@@ -23,9 +36,18 @@ if (!app.Environment.IsDevelopment())
 }
 
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>();
+
+app.MapPost("/konto/abmelden", async (HttpContext ctx, IAntiforgery antiforgery, SignInManager<IdentityUser> signInManager) =>
+{
+    await antiforgery.ValidateRequestAsync(ctx);
+    await signInManager.SignOutAsync();
+    return Results.Redirect("/");
+});
 
 app.Run();

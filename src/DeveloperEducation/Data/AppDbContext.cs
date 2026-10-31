@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeveloperEducation.Data;
@@ -18,7 +20,7 @@ public class Lernnotiz
     public DateTimeOffset ErstelltAm { get; set; }
 }
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<IdentityUser>(options)
 {
     public DbSet<Lernnotiz> Lernnotizen => Set<Lernnotiz>();
 }
