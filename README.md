@@ -11,6 +11,14 @@ dotnet run --project src/DeveloperEducation
 
 Dann http://localhost:5011 öffnen.
 
+## Tests
+
+```sh
+dotnet test
+```
+
+Das xUnit-Projekt `tests/DeveloperEducation.Tests` enthält Integrationstests (`WebApplicationFactory<Program>` gegen eine temporäre SQLite-Datei: öffentliche Seiten, Registrierung, Anmeldung, Abmelden, Zugriffsschutz von `/notizen`, inkl. Antiforgery-Token) sowie Unit-Tests für die Validierung von `Lernnotiz`. `.github/workflows/ci.yml` führt die Tests bei jedem Push und Pull Request aus.
+
 ## Datenbank
 
 Die Seite `/notizen` speichert Lernnotizen in SQLite (EF Core). Die Verbindung steht in `appsettings.json`

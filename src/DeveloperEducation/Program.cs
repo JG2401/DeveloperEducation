@@ -51,3 +51,6 @@ app.MapPost("/konto/abmelden", async (HttpContext ctx, IAntiforgery antiforgery,
 });
 
 app.Run();
+
+// Makes the entry point visible to WebApplicationFactory<Program> in the test project. No behaviour change.
+public partial class Program { }
