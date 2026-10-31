@@ -8,6 +8,9 @@ RUN dotnet publish src/DeveloperEducation/DeveloperEducation.csproj -c Release -
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app .
+RUN mkdir /data && chown $APP_UID /data
+USER $APP_UID
 ENV ASPNETCORE_HTTP_PORTS=8080
+ENV ConnectionStrings__Default="Data Source=/data/app.db"
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "DeveloperEducation.dll"]

@@ -1,0 +1,68 @@
+@page "/notizen"
+@using DeveloperEducation.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+
+<PageTitle>Notizen</PageTitle>
+
+<h1>Lernnotizen</h1>
+
+<EditForm Model="Neu" FormName="neue-notiz" OnValidSubmit="Speichern">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label for="titel" class="form-label">Titel</label>
+        <InputText id="titel" class="form-control" @bind-Value="Neu.Titel" />
+        <ValidationMessage For="() => Neu.Titel" />
+    </div>
+    <div class="mb-3">
+        <label for="text" class="form-label">Text</label>
+        <InputTextArea id="text" class="form-control" rows="4" @bind-Value="Neu.Text" />
+        <ValidationMessage For="() => Neu.Text" />
+    </div>
+    <button type="submit" class="btn btn-primary">Speichern</button>
+</EditForm>
+
+<hr />
+
+@if (notizen.Count == 0)
+{
+    <p>Noch keine Notizen vorhanden.</p>
+}
+else
+{
+    foreach (var n in notizen)
+    {
+        <div class="card mb-2">
+            <div class="card-body">
+                <h2 class="h5 card-title">@n.Titel</h2>
+                <p class="card-text" style="white-space: pre-wrap">@n.Text</p>
+                <p class="card-text small text-muted">@n.ErstelltAm.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
+            </div>
+        </div>
+    }
+}
+
+<p class="small text-muted">Dies sind persönliche Notizen; sie stammen von Nutzern und nicht aus der Verordnung.</p>
+
+@code {
+    [SupplyParameterFromForm]
+    private Lernnotiz Neu { get; set; } = new();
+
+    private List<Lernnotiz> notizen = [];
+
+    protected override async Task OnInitializedAsync() => await Laden();
+
+    private async Task Speichern()
+    {
+        Db.Lernnotizen.Add(new Lernnotiz { Titel = Neu.Titel, Text = Neu.Text, ErstelltAm = DateTimeOffset.UtcNow });
+        await Db.SaveChangesAsync();
+        Neu = new();
+        await Laden();
+    }
+
+    private async Task Laden()
+    {
+        // SQLite cannot ORDER BY DateTimeOffset; Id order equals insertion order.
+        notizen = await Db.Lernnotizen.OrderByDescending(n => n.Id).ToListAsync();
+    }
+}
